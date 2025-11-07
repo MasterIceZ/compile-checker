@@ -5,9 +5,27 @@ import platform
 import subprocess
 import os
 import tempfile
+from scalar_fastapi import get_scalar_api_reference
 
 app = FastAPI()
 start_time = time.time()
+
+HOST = os.getenv("HOST", "0.0.0.0")
+PORT = int(os.getenv("PORT", "8080"))
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
+
+DOMAIN = os.getenv("DOMAIN", "localhost")
+
+@app.get("/healthz")
+async def healthz():
+  current_time = time.time()
+  return {
+    "status": "OK",
+    "uptime": current_time - start_time,
+    "running-on": platform.version(),
+    "environment": ENVIRONMENT,
+    "domain": DOMAIN
+  }
 
 @app.get("/healthz")
 async def healthz():
@@ -79,7 +97,16 @@ async def cleanup():
       status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
       content={ "error": f"Cleanup Failed: {str(e)}" }
     )
+    
+@app.get("/scalar", include_in_schema=False)
+async def scalar_html():
+  return get_scalar_api_reference(
+    openapi_url=app.openapi_url,
+  )
   
 if __name__ == "__main__":
   import uvicorn
-  uvicorn.run(app, host="0.0.0.0", port=8080)
+  print(f"Starting server on {HOST}:{PORT} in {ENVIRONMENT} mode")
+  if ENVIRONMENT == "production":
+    print(f"Production domain: {DOMAIN}")
+  uvicorn.run(app, host=HOST, port=PORT)
