@@ -63,6 +63,22 @@ async def compile(file: UploadFile = File(...)):
       status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
       content={ "error": f"Internal Server Error: {str(e)}" }
     )
+    
+@app.delete("/cleanup")
+async def cleanup():
+  try:
+    tmp_dir = os.path.join(os.getcwd(), "tmp")
+    if os.path.exists(tmp_dir):
+      for filename in os.listdir(tmp_dir):
+        file_path = os.path.join(tmp_dir, filename)
+        if os.path.isfile(file_path):
+          os.unlink(file_path)
+    return { "status": "Cleanup successful" }
+  except Exception as e:
+    return JSONResponse(
+      status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+      content={ "error": f"Cleanup Failed: {str(e)}" }
+    )
   
 if __name__ == "__main__":
   import uvicorn
