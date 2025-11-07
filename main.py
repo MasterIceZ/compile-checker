@@ -57,7 +57,7 @@ async def compile(file: UploadFile = File(...)):
     output_file_path = os.path.join(tmp_dir, output_file_name)
 
     result = subprocess.run(
-      ["g++-15", "-std=c++17", "-O2", temp_file_path, "-o", output_file_path],
+      ["g++", "-std=c++17", "-O2", "-static", "-pipe", temp_file_path, "-o", output_file_path],
       capture_output=True,
       text=True
     )
